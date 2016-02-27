@@ -12,6 +12,7 @@
  */
 
 
+
 #include <signal.h>
 #include <cstdio>
 #include <cstdlib>
@@ -61,8 +62,8 @@ int main(int argc, char *argv[])
   // 对人物识别的初始化
 
 
-  float min_height = 1.40,
-        max_height = 2.20,
+  float min_height = 1.50,
+        max_height = 2.00,
         min_width = 0.10,
         max_width = 2.00;
   float voxel_size = 0.06; 
@@ -93,8 +94,8 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
   // 配置 Kinect2
 
-  // 创建一个Info级别的Logger
-  libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Info));
+  // 创建一个Debug级别的Logger
+  libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
 
   // 初始化对象
   libfreenect2::Freenect2 freenect2;
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
   // 开始循环
   while(!protonect_shutdown && !viewer.wasStopped())
   {
-    
+
     // 等待接收总数据帧
     listener.waitForNewFrame(frames);
     libfreenect2::Frame *rgb = frames[libfreenect2::Frame::Color];
@@ -152,8 +153,6 @@ int main(int argc, char *argv[])
     // 选取registered
     cv::Mat registeredMatrix(registered.height, registered.width, CV_8UC4, registered.data);
 
-    // 释放总数据帧
-    listener.release(frames);
 
     // 预处理 depth, rgb, registered
     depthMatrix /= 4500.0f;
@@ -171,6 +170,7 @@ int main(int argc, char *argv[])
       point.z *= 0.01;
     }
     
+
     // 在点云上应用people_detection
     std::vector<pcl::people::PersonCluster<PointT> > clusters;   // vector containing persons clusters
     people_detector.setInputCloud(cloud);
@@ -182,19 +182,24 @@ int main(int argc, char *argv[])
     viewer.removeAllShapes();
     pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud);
     viewer.addPointCloud<PointT> (cloud, rgb_handler, "input_cloud");
+    
+
     // 绘制目标方框
     unsigned int k = 0;
     for(std::vector<pcl::people::PersonCluster<PointT> >::iterator it = clusters.begin(); it != clusters.end(); ++it)
-    {
-      // TODO  get the info. from `it`
-      it->drawTBoundingBox(viewer, k);
-      k++;
-    }
+        if (it->getHeight() > min_height)
+        {
+          // TODO  get the info. from `it`
+          it->drawTBoundingBox(viewer, k);
+          k++;
+        }
     std::cout<<k<<" people found"<<std::endl;
     
     // 刷新viewer
     viewer.spinOnce();
-
+    
+    // 释放总数据帧
+    listener.release(frames);
   }
 
   // 通过InterruptKey或者关闭viewer退出循环后
