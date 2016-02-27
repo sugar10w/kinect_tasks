@@ -44,14 +44,29 @@ PointCloudPtr loadRGBD2Cloud(string depth_file, string reg_file)
 
 PointCloudPtr loadRGBD2Cloud(int n)
 {
-  char buffer[20];
-  sprintf(buffer, "%d", n); 
+  char buffer[20]; sprintf(buffer, "%d", n); 
   return loadRGBD2Cloud(prefixDepth+buffer+suffixDepth, prefixReg+buffer+suffixReg);
 }
 
 cv::Mat loadRGB(int n)
 {
-	char buffer[20];
-	sprintf(buffer, "%d", n);
+	char buffer[20]; sprintf(buffer, "%d", n);
 	return cv::imread(prefixRgb+buffer+suffixRgb);
+}
+
+cv::Mat loadRegistered(int n)
+{
+    char buffer[20]; sprintf(buffer, "%d", n);
+    return cv::imread(prefixReg+buffer+suffixReg);
+}
+
+cv::Mat loadDepth(int n)
+{
+    char buffer[20]; sprintf(buffer, "%d", n);
+    return reload_32f_image(prefixDepth+buffer+suffixDepth);
+}
+
+cv::Mat loadDepth(std::string depth_file)
+{
+    return reload_32f_image(depth_file);
 }

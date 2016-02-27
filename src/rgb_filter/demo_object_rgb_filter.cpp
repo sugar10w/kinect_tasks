@@ -29,7 +29,7 @@ int main(int argc, const char * argv[])
 {
 	/* 获取图片 */
     if (argc!=2)
-     {
+    {
        std::cout<<"Usage: "<<argv[0]<<" img"<<std::endl;
        return -1;
     }
