@@ -1,6 +1,6 @@
 /* 
  * Created by yht on 04/10/15.
- * Last edited by sugar10w, 2016.2.25
+ * Last edited by sugar10w, 2016.2.28
  *
  * 检测BGR图片中的线段。
  *
@@ -30,7 +30,10 @@ namespace vision
 
         /* 设置忽略区域 */
         void SetIgnoreMask(const cv::Mat & ignore_mask);
-    
+        
+        /* 获取Lines坐标 */
+        std::vector<cv::Vec4i> GetLines();
+
     private:
 
         /* 将边缘图像降采样。 打开removeContent则去除内部色块仅保留轮廓 */
@@ -48,6 +51,8 @@ namespace vision
         int downsample_ratio_;
         /* 倾斜角的正切/余切限制；设为负数则不检查斜率 */
         float slope_range_;
+        /* 线段的坐标 */
+        std::vector<cv::Vec4i> lines_;
     };
 }
 }

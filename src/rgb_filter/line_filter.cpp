@@ -98,6 +98,7 @@ namespace vision
             line[0] = line[2] = x;
             line[1] = y-cntPoint; line[3] = y;
             lines.push_back(line);
+            cntPoint = 0; cntNull = 0;
           }
         }
       }
@@ -117,6 +118,7 @@ namespace vision
             line[0]=x-cntPoint; line[2]=x;
             line[1] = line[3] = y;
             lines.push_back(line);
+            cntPoint = 0; cntNull = 0;
           }
         }
       }
@@ -160,21 +162,21 @@ namespace vision
         //imshow("downsampled ", downsampled);
 
         /* Hough，暴力 取出线段 */
-        std::vector<cv::Vec4i> lines;
-        HoughLinesP(downsampled, lines, 1, CV_PI/180, 10, (int)(downsampled.rows*0.2), 3);
-        BruteRemoveVerticals(downsampled, lines);
+        lines_.clear();
+        HoughLinesP(downsampled, lines_, 1, CV_PI/180, 10, (int)(downsampled.rows*0.2), 3);
+        BruteRemoveVerticals(downsampled, lines_);
 
         /* 应用降采样得到的结果，在output上绘制 */
         int width = downsample_ratio_ * 4;
-        for (size_t i = 0; i < lines.size(); i++)
+        for (size_t i = 0; i < lines_.size(); i++)
         {
-            cv::Vec4i & l = lines[i];
+            cv::Vec4i & l = lines_[i];
             if (slope_range_>0 && CheckSlope(l))
             {
-                l[0]=l[0]*downsample_ratio_+downsample_ratio_/2; //if (l[0]>=output.rows) l[0] = output.rows-1;
-                l[1]=l[1]*downsample_ratio_+downsample_ratio_/2; //if (l[1]>=output.cols) l[1] = output.cols-1;
-                l[2]=l[2]*downsample_ratio_+downsample_ratio_/2; //if (l[2]>=output.rows) l[2] = output.rows-1;
-                l[3]=l[3]*downsample_ratio_+downsample_ratio_/2; //if (l[3]>=output.cols) l[3] = output.cols-1;
+                l[0]=l[0]*downsample_ratio_+downsample_ratio_/2; if (l[0]>=output.cols) l[0] = output.cols-1;
+                l[1]=l[1]*downsample_ratio_+downsample_ratio_/2; if (l[1]>=output.rows) l[1] = output.rows-1;
+                l[2]=l[2]*downsample_ratio_+downsample_ratio_/2; if (l[2]>=output.cols) l[2] = output.cols-1;
+                l[3]=l[3]*downsample_ratio_+downsample_ratio_/2; if (l[3]>=output.rows) l[3] = output.rows-1;
                 
                 line(output, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(255), width, 4);
             }
@@ -188,7 +190,12 @@ namespace vision
         assert(ignore_mask.empty() || ignore_mask.type() == CV_8UC1);
         ignore_mask_ = ignore_mask.clone();
     }
-
+    
+    /* 获取Lines坐标 */
+    std::vector<cv::Vec4i> LineFilter::GetLines()
+    {
+        return lines_;
+    }
 
 }
 }

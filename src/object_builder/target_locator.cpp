@@ -20,6 +20,9 @@
 #include<pcl/common/transforms.h>
 #include<pcl/io/pcd_io.h>
 
+namespace tinker {
+namespace vision {    
+
 static float Z_ZOOM = RAW_Z_ZOOM;
 static float RADIUS_Z = RAW_RADIUS_Z/RAW_Z_ZOOM;
 
@@ -166,3 +169,5 @@ PointCloudPtr RotateAfterTime(PointCloudPtr cloud, float time)
   return cloud_output;
 }
 
+}
+}

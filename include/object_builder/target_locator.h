@@ -15,6 +15,9 @@
 
 #include"common.h"
 
+namespace tinker {
+namespace vision {   
+
 const float RAW_Z_ZOOM =  0.5f;  //TODO 尺寸大于10cm的物体，使用1;  宽度小于10cm的物体，使用0.5
 const float RAW_RADIUS_Z = 4.0f; //TODO 旋转展台半径，需要Z_ZOOM修正
 const float ROTATING_SPEED =  6.28 / 62.5; // 旋转展台顺时针旋转
@@ -32,5 +35,8 @@ PointCloudPtr CutNearCenter(PointCloudPtr cloud, PointT center);
 PointCloudPtr MoveToCenter(PointCloudPtr cloud, PointT center);
 
 PointCloudPtr RotateAfterTime(PointCloudPtr cloud, float time);
+
+}
+}
 
 #endif //_OBJECTBUILDER_LOCATECENTER_

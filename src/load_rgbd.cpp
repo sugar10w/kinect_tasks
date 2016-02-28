@@ -18,6 +18,9 @@
 
 #include"kinect2pcl/point_cloud_builder.h"
 
+namespace tinker {
+namespace vision {    
+
 using namespace std;
 
 
@@ -69,4 +72,7 @@ cv::Mat loadDepth(int n)
 cv::Mat loadDepth(std::string depth_file)
 {
     return reload_32f_image(depth_file);
+}
+
+}
 }
