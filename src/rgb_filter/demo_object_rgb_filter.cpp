@@ -3,6 +3,8 @@
  * Last edited by sugar10w, 2016.2.25
  *
  * 测试 ColorDetector, LineFilter, EntropyFilter, 从BGR图像中分离背景
+ * 
+ * TODO 用此程序改写的RgbObjectFilter重现此程序
  *
  */
 
@@ -29,7 +31,7 @@ int main(int argc, const char * argv[])
 {
 	/* 获取图片 */
     if (argc!=2)
-     {
+    {
        std::cout<<"Usage: "<<argv[0]<<" img"<<std::endl;
        return -1;
     }
@@ -47,6 +49,8 @@ int main(int argc, const char * argv[])
 	cv::Rect raw_margin_rect = GetMarginRect(raw_img);
 	cv::Mat img = FixColor( cv::Mat(raw_img, raw_margin_rect), 6);
     
+    cv::imshow("fixed_raw", img);
+
     /* 查找纯色块 */
     ColorBlockFilter color_detector(3);
     cv::Mat color_mask = color_detector.GetMask(img);
@@ -57,7 +61,17 @@ int main(int argc, const char * argv[])
     LineFilter line_filter(4, 0.342f);
     line_filter.SetIgnoreMask(color_mask);
     cv::Mat lines_mask = line_filter.GetMask(img);
-    
+   
+    std::vector<cv::Vec4i> lines = line_filter.GetLines();
+    std::cout<<"size = "<<lines.size()<<std::endl;
+    for (int i=0; i<lines.size(); ++i)
+    {
+        cv::Vec4i & l = lines[i];
+        std::cout<<"["<<l[0]<<","<<l[1]<<"] ["<<l[2]<<","<<l[3]<<"]"
+            <<std::endl;
+    }
+
+
     /* 处理颜色熵 */
     EntropyFilter entropy_filter(5, 0.4);
     cv::Mat entropy_mask = entropy_filter.GetMask(img);

@@ -22,6 +22,11 @@
  *
  * Binary distributions must follow the binary distribution requirements of
  * either License.
+ *
+ * 二维画面，用矩形标出找到的物体
+ *
+ * TODO 整理代码
+ *
  */
 
 /** @file Protonect.cpp Main application file. */

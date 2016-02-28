@@ -39,7 +39,7 @@ namespace vision
         entropy_table_[0] = 0;
         double gray_levels = filter_size_ * filter_size_;
         for (int i = 1; i <= filter_size_ * filter_size_; i++)
-         {
+        {
             entropy_table_[i] = log((double) i / gray_levels) / log(2);
         }
     }

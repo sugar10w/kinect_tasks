@@ -33,6 +33,8 @@
 #include "object_builder/target_locator.h"
 #include "kinect2pcl/image_rebuild.h"
 
+using namespace tinker::vision;
+
 /* 批量输出文件的命名 */
 const std::string prefixRes = "res",  // 目标当前帧点云名称
                   prefixCut = "cut";  // 截取图片的名称

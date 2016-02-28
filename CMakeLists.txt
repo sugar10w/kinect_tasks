@@ -38,10 +38,12 @@ SET(rgb_filter_src
     src/rgb_filter/entropy_filter.cpp
     src/rgb_filter/line_filter.cpp
     src/rgb_filter/color_fixer.cpp
+    src/rgb_filter/rgb_object_filter.cpp
 )
 ## pcl_filter: 处理点云信息
 SET(pcl_filter_src
     src/pcl_filter/point_cloud_minus.cpp
+    src/pcl_filter/plane_filter.cpp
 )    
 
 # 各演示程序
@@ -52,6 +54,19 @@ ADD_EXECUTABLE(display_people_detection
 )
 TARGET_LINK_LIBRARIES(display_people_detection
     ${freenect2_LIBRARIES}
+    ${OpenCV_LIBS}
+    ${PCL_LIBRARIES}
+)
+
+## object_finder: 提取目标
+ADD_EXECUTABLE(object_finder 
+    src/object_finder.cpp
+    src/load_rgbd.cpp
+    ${kinect2pcl_src}
+    ${rgb_filter_src}
+    ${pcl_filter_src}
+)
+TARGET_LINK_LIBRARIES(object_finder
     ${OpenCV_LIBS}
     ${PCL_LIBRARIES}
 )
@@ -79,8 +94,8 @@ ADD_EXECUTABLE(object_builder_from_raw
     src/object_builder/object_builder_from_raw.cpp
     src/load_rgbd.cpp
     ${kinect2pcl_src}
-    ${object_builder_src}
     ${pcl_filter_src}
+    ${object_builder_src}
 )
 TARGET_LINK_LIBRARIES(object_builder_from_raw
     ${OpenCV_LIBS}

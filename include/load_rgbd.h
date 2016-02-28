@@ -17,6 +17,9 @@
 #include<opencv2/opencv.hpp>
 #include"common.h"
 
+namespace tinker {
+namespace vision {    
+
 const std::string prefixDepth = "depth", suffixDepth = ".bin";
 const std::string prefixReg = "registered", suffixReg = ".png";
 const std::string prefixRgb = "rgb", suffixRgb = ".png";
@@ -24,5 +27,11 @@ const std::string prefixRgb = "rgb", suffixRgb = ".png";
 PointCloudPtr loadRGBD2Cloud(int n);
 PointCloudPtr loadRGBD2Cloud(std::string depth_file, std::string reg_file);
 cv::Mat loadRGB(int n);
+cv::Mat loadRegistered(int n);
+cv::Mat loadDepth(int n);
+cv::Mat loadDepth(std::string depth_file);
+
+}
+}
 
 #endif //_OBJECTSCAN_LOADRGBD_

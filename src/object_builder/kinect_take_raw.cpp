@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
   }
 
   // create a console logger with debug level (default is console logger with info level)
-  libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Info));
+  libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
 
   MyFileLogger *filelogger = new MyFileLogger(getenv("LOGFILE"));
   if (filelogger->good())

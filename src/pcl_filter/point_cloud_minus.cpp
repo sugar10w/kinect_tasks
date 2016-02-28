@@ -1,3 +1,10 @@
+/*
+ * Created by sugar10w, 2016.1
+ * Last edited by sugar10w, 2016.2.28
+ *
+ * 利用kdTree进行点云之间的减法运算
+ *
+ */
 
 #include "pcl_filter/point_cloud_minus.h"
 
@@ -6,24 +13,24 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <opencv2/opencv.hpp>
 
-float average(
-   std::vector<float>& vec
- )
+namespace tinker {
+namespace vision {    
+
+static float average(
+   std::vector<float>& vec )
 {
   float sum;
   for (int i=0; i<vec.size(); ++i) sum+=vec[i];
   return sum/vec.size();
 }
 
-float averageKDistance(
+static float averageKDistance(
    pcl::KdTreeFLANN<PointT> & kdtree,
    std::vector<int> & pointIdxNKNSearch,
    std::vector<float> & pointNKNSquaredDistance,
    PointT point,
-   int K 
- )
+   int K )
 {
- 
   if (kdtree.nearestKSearch(point, K, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
    {
     return average(pointNKNSquaredDistance);
@@ -40,8 +47,7 @@ PointCloudPtr kdTreeMinus(
     PointCloudPtr cloud_a, 
     PointCloudPtr cloud_b,
     float threshold,
-    float distanceThreshold
-)
+    float distanceThreshold )
 {
  std::vector<int> chosenIndices;
  int size = cloud_a->width * cloud_a->height;
@@ -76,8 +82,7 @@ void removeOutlier(
   PointCloudPtr cloud,
   PointCloudPtr cloud_output,
   int K,
-  float distanceThreshold
-)
+  float distanceThreshold )
 {
   int size = cloud->width * cloud->height;
 
@@ -99,6 +104,7 @@ void removeOutlier(
   cloud_output->height = 1;
   cloud_output->resize(chosenIndices.size());
   for (int i=0; i<chosenIndices.size(); ++i) cloud_output->points[i]=cloud->points[chosenIndices[i]];
- }
+}
 
-
+}
+}
