@@ -10,10 +10,14 @@
 
 #include <pcl/io/pcd_io.h>
 
+#include <pcl/filters/voxel_grid.h>
+
+#include "object_builder/cluster_divider.h"
 #include "kinect2pcl/point_cloud_builder.h"
 #include "rgb_filter/rgb_object_filter.h"
 #include "pcl_filter/plane_filter.h"
 #include "load_rgbd.h"
+#include "common.h"
 
 using namespace tinker::vision;
 
@@ -60,8 +64,8 @@ int main(int argc, char* argv[])
     //raw (xyzMat required)
     PointCloudBuilder raw_builder(depth_img, raw_img);
     raw_builder.setBuildXyzMat(true);
-    PointCloudPtr raw_cloud = raw_builder.getPointCloud();
-    cv::Mat raw_cloud_mat = raw_builder.getXyzMat();
+    PointCloudPtr cloud_raw = raw_builder.getPointCloud();
+    cv::Mat cloud_raw_mat = raw_builder.getXyzMat();
 
     
     //back
@@ -82,6 +86,33 @@ int main(int argc, char* argv[])
    
 
     //raw with no plane
-    plane_filter.Filter(raw_cloud);
-    pcl::io::savePCDFile("raw_no_plane.pcd", *raw_cloud, true); 
+    //plane_filter.Filter(cloud_raw);
+    //pcl::io::savePCDFile("raw_no_plane.pcd", *cloud_raw, true); 
+
+
+
+    // prepare for the cloud to display :::
+    PointCloudPtr cloud_display(new PointCloud);
+    float leaf_size_ = 2.0f;
+    pcl::VoxelGrid<PointT> sor;
+    sor.setInputCloud(cloud_raw);
+    sor.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+    sor.filter(*cloud_display);
+
+    *cloud_display += *cloud_object;
+
+    // initialize the viewer and set the cloud inside 
+    pcl::visualization::PCLVisualizer viewer;
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud_display);
+    viewer.addPointCloud<PointT> (cloud_display, rgb_handler, "cloud_object");
+
+    // Get the clusters and Draw them on the viewer
+    ClusterDivider cluster_divider(cloud_object);
+    std::vector<ObjectCluster> clusters = cluster_divider.GetDividedCluster();
+    for (int i=0; i<clusters.size(); ++i)
+    {
+        clusters[i].DrawBoundingBox(viewer, i);
+    }
+
+    viewer.spin();
 }

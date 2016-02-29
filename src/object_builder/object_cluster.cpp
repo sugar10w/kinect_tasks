@@ -6,7 +6,7 @@
  *
  */
 
-#include "object_finder/object_cluster.h"
+#include "object_builder/object_cluster.h"
 
 #include <sstream>
 
@@ -44,7 +44,7 @@ ObjectCluster::ObjectCluster(const PointCloudPtr& input_cloud)
 }
 
 // 在viewer上绘制方框
-void DrawBoundingBox(pcl::PCLVisualizer& viewer, int object_number)
+void ObjectCluster::DrawBoundingBox(pcl::visualization::PCLVisualizer& viewer, int object_number)
 {
     std::stringstream box_name;
     box_name << "object_box_" << object_number;

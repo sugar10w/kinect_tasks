@@ -23,7 +23,7 @@ public:
     // 新建物体
     ObjectCluster(const PointCloudPtr& input_cloud);
     // 在viewer上绘制方框
-    void DrawBoundingBox(pcl::PCLVisualizer& viewer, int object_number);
+    void DrawBoundingBox(pcl::visualization::PCLVisualizer& viewer, int object_number);
 private:
     // 大概的位置和颜色信息
     float x_min, x_max, y_min, y_max, z_min, z_max;
@@ -31,7 +31,7 @@ private:
     // 点云
     PointCloudPtr cloud;
     
-}
+};
 
 }
 }

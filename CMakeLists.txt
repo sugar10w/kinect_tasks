@@ -31,6 +31,8 @@ SET(kinect2pcl_src
 ## object_builder: 采集物品信息
 SET(object_builder_src
     src/object_builder/target_locator.cpp
+    src/object_builder/cluster_divider.cpp
+    src/object_builder/object_cluster.cpp
 )    
 ## rgb_filter: 处理BGR信息
 SET(rgb_filter_src
@@ -65,6 +67,7 @@ ADD_EXECUTABLE(object_finder
     ${kinect2pcl_src}
     ${rgb_filter_src}
     ${pcl_filter_src}
+    ${object_builder_src}
 )
 TARGET_LINK_LIBRARIES(object_finder
     ${OpenCV_LIBS}
@@ -73,7 +76,7 @@ TARGET_LINK_LIBRARIES(object_finder
 
 ## demo_object_rgb_filter: 演示RGB目标提取方法
 ADD_EXECUTABLE(demo_object_rgb_filter
-    src/rgb_filter/demo_object_rgb_filter.cpp
+    src/demo_object_rgb_filter.cpp
     ${rgb_filter_src}
 )
 TARGET_LINK_LIBRARIES(demo_object_rgb_filter
@@ -82,7 +85,7 @@ TARGET_LINK_LIBRARIES(demo_object_rgb_filter
 
 ## kinect_take_raw: 采集物体的原始信息（旋转展台）
 ADD_EXECUTABLE(kinect_take_raw
-    src/object_builder/kinect_take_raw.cpp
+    src/kinect_take_raw.cpp
 )
 TARGET_LINK_LIBRARIES(kinect_take_raw
     ${freenect2_LIBRARIES}
@@ -91,7 +94,7 @@ TARGET_LINK_LIBRARIES(kinect_take_raw
 
 ## object_builder_from_raw: 从物体的原始信息合成出物体的全方向点云
 ADD_EXECUTABLE(object_builder_from_raw
-    src/object_builder/object_builder_from_raw.cpp
+    src/object_builder_from_raw.cpp
     src/load_rgbd.cpp
     ${kinect2pcl_src}
     ${pcl_filter_src}

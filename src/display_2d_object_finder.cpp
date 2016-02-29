@@ -1,4 +1,4 @@
-/*
+/* TODO 重写
  * This file is part of the OpenKinect Project. http://www.openkinect.org
  *
  * Copyright (c) 2011 individual OpenKinect contributors. See the CONTRIB file
@@ -25,7 +25,6 @@
  *
  * 二维画面，用矩形标出找到的物体
  *
- * TODO 整理代码
  *
  */
 
