@@ -14,6 +14,9 @@
 #include <opencv2/opencv.hpp>
 #include "common.h"
 
+namespace tinker {
+namespace vision {    
+
 /* 标记LowRes(512*424)与HiRes(1920*1080)之间关系的一组常数
  * LowRes的上下边缘是无效点，HiRes的左右边缘是无效点 */
 extern const int kLowResWidth;
@@ -30,5 +33,8 @@ cv::Rect GetHDRectFromPointCloud(PointCloudPtr cloud, bool hiRes = false);
 
 /* 利用Kinect标定值，将点云在图片(lowRes或hiRes)的位置切出来 */
 cv::Mat GetHDImageFromPointCloud(PointCloudPtr cloud, cv::Mat & totalImage, bool hiRes = true, bool extend = false);
+
+}
+}
 
 #endif //OBJECTFINDER_IMAGEREBUILD_H

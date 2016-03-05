@@ -7,9 +7,9 @@
  *
  */
 
+#include <cstring>
 
 #include <pcl/io/pcd_io.h>
-
 #include <pcl/filters/voxel_grid.h>
 
 #include "object_builder/cluster_divider.h"
@@ -30,14 +30,19 @@ PointCloudPtr GetCloudFromMask(cv::Mat& raw_img, cv::Mat& depth_img, cv::Mat mas
     return cloud;
 } 
 
+bool show_background = false;
+pcl::visualization::PCLVisualizer viewer;
+
 int main(int argc, char* argv[])
 {
     /* 获取depth, registered */
-    if (argc!=3)
+    if (argc<3)
     {
        std::cout<<"Usage: "<<argv[0]<<" depth img"<<std::endl;
        return -1;
     }
+    if (argc>=4 && strcmp(argv[3],"-b")==0) show_background = true;
+
     std::string filename = argv[2];
 	std::string depthfilename = argv[1];
 
@@ -81,8 +86,7 @@ int main(int argc, char* argv[])
 
     //lines
     PointCloudPtr cloud_lines = GetCloudFromMask(raw_img, depth_img, ~lines_mask);
-    //plane_filter.Filter(cloud_lines);
-    pcl::io::savePCDFile("lines.pcd", *cloud_lines, true);
+//    pcl::io::savePCDFile("lines.pcd", *cloud_lines, true);
    
 
     //raw with no plane
@@ -90,21 +94,35 @@ int main(int argc, char* argv[])
     //pcl::io::savePCDFile("raw_no_plane.pcd", *cloud_raw, true); 
 
 
+    PointCloudPtr cloud_display;
 
-    // prepare for the cloud to display :::
-    PointCloudPtr cloud_display(new PointCloud);
-    float leaf_size_ = 2.0f;
-    pcl::VoxelGrid<PointT> sor;
-    sor.setInputCloud(cloud_raw);
-    sor.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
-    sor.filter(*cloud_display);
+    if (show_background)
+    {
+        // prepare for the cloud to display :::
+        PointCloudPtr cloud_display(new PointCloud);
+        float leaf_size_ = 3.0f;
+        pcl::VoxelGrid<PointT> sor;
+        sor.setInputCloud(cloud_raw);
+        sor.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+        sor.filter(*cloud_display);
 
-    *cloud_display += *cloud_object;
+        *cloud_display += *cloud_object;
 
+        pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud_display);
+        viewer.addPointCloud<PointT> (cloud_display, rgb_handler, "cloud_object");
+    }
+    else
+    {
+        PointCloudPtr cloud_display = cloud_object;
+
+        pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud_display);
+        viewer.addPointCloud<PointT> (cloud_display, rgb_handler, "cloud_object");
+
+    }
+    
     // initialize the viewer and set the cloud inside 
-    pcl::visualization::PCLVisualizer viewer;
-    pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud_display);
-    viewer.addPointCloud<PointT> (cloud_display, rgb_handler, "cloud_object");
+
+    
 
     // Get the clusters and Draw them on the viewer
     ClusterDivider cluster_divider(cloud_object);

@@ -1,17 +1,13 @@
 /*
- * Created by sugar10w, 2016.2.23
- * Last edited by sugar10w, 2016.2.24
+ * Created by sugar10w, 2016.3.2
+ * Last edited by sugar10w, 2016.3.2
  *
- * 在点云中找到人物，并实时地在viewer中标出他们的位置。
+ * 使用PCLVisualizer实时显示三维点云
+ * 并标记其中的找到的物体 
  * 
  * 使用libfreenect2连接Kinect2
- * 使用GroundBasedPeopleDetectionApp查找人物
- *   
- * TODO 注意，默认了Kinect距离地面的高度为1.10米，且视线平行于地面
  * 
  */
-
-
 
 #include <signal.h>
 #include <cstdio>
@@ -30,17 +26,18 @@
 #include <libfreenect2/logger.h>
 
 #include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/people/ground_based_people_detection_app.h>
+#include <pcl/filters/voxel_grid.h>
 
 #include <kinect2pcl/point_cloud_builder.h>
+#include "object_builder/cluster_divider.h"
+#include "kinect2pcl/point_cloud_builder.h"
+#include "rgb_filter/rgb_object_filter.h"
+#include "pcl_filter/plane_filter.h"
 
-using std::cout;
-using std::endl;
+
 using namespace tinker::vision;
 using namespace libfreenect2;
 
-// kinect距离地面的高度，单位米 
-const float KINECT_HEIGHT = 1.10;
 
 // 显示点云的窗口 PCD Viewer
 pcl::visualization::PCLVisualizer viewer("PCD Viewer");
@@ -54,42 +51,19 @@ void sigint_handler(int signal_number)
   protonect_shutdown = true;
 }
 
+// 从蒙版和源数据获取点云
+PointCloudPtr GetCloudFromMask(cv::Mat& raw_img, cv::Mat& depth_img, cv::Mat mask)
+{
+    cv::Mat depth = depth_img.clone();
+    depth.setTo(0, ~mask);
+    PointCloudBuilder builder(depth, raw_img);
+    PointCloudPtr cloud = builder.getPointCloud();
+    return cloud;
+} 
 
 int main(int argc, char *argv[])
 {
 
-  // --------------------------------------------------------------------------
-  // 对人物识别的初始化
-
-
-  float min_height = 1.50,
-        max_height = 2.00,
-        min_width = 0.10,
-        max_width = 2.00;
-  float voxel_size = 0.06; 
-  Eigen::Matrix3f rgb_intrinsics_matrix; // TODO: Kinect RGB camera intrinsics; 有何作用? 对Kinect2是否必要?
-  rgb_intrinsics_matrix << 525, 0.0, 319.5, 0.0, 525, 239.5, 0.0, 0.0, 1.0;   
-
-  //TODO 设置地面的方程 y - KINECT_HEIGHT = 0
-  Eigen::VectorXf ground_coeffs;  
-  ground_coeffs.resize(4);
-  ground_coeffs(0) = 0;
-  ground_coeffs(1) = 1;
-  ground_coeffs(2) = 0;
-  ground_coeffs(3) = -KINECT_HEIGHT;
-  
-  // Create classifier for people detection:  
-  pcl::people::PersonClassifier<pcl::RGB> person_classifier;
-  std::string svm_filename = "../data/trainedLinearSVMForPeopleDetectionWithHOG.yaml";  //TODO 更新此文件; 原训练文件暂时无效;
-  float min_confidence = -1.5;                                                          //TODO 并修正置信度阈值
-  person_classifier.loadSVMFromFile(svm_filename);  
-
-  // People detection app initialization:
-  pcl::people::GroundBasedPeopleDetectionApp<PointT> people_detector;    // people detection object
-  people_detector.setVoxelSize(voxel_size);                        // set the voxel size
-  people_detector.setIntrinsics(rgb_intrinsics_matrix);            // set RGB camera intrinsic parameters
-  people_detector.setClassifier(person_classifier);                // set person classifier
-  people_detector.setPersonClusterLimits(min_height, max_height, min_width, max_width);     // set person size limits
 
   // --------------------------------------------------------------------------
   // 配置 Kinect2
@@ -160,41 +134,43 @@ int main(int argc, char *argv[])
     cv::cvtColor(registeredMatrix, registeredMatrix, CV_BGRA2BGR);
     // 获取点云cloud
     PointCloudBuilder builder(depthMatrix, registeredMatrix);
-    PointCloudPtr cloud = builder.getPointCloud();
-    // 预处理点云cloud
-    for (int i=0; i<cloud->size(); ++i)
-    {
-      PointT & point = cloud->points[i];
-      point.x *= 0.01;
-      point.y *= -0.01;
-      point.z *= 0.01;
-    }
-    
+    PointCloudPtr cloud_raw = builder.getPointCloud();
 
-    // 在点云上应用people_detection
-    std::vector<pcl::people::PersonCluster<PointT> > clusters;   // vector containing persons clusters
-    people_detector.setInputCloud(cloud);
-    people_detector.setGround(ground_coeffs);                    // set floor coefficients
-    people_detector.compute(clusters);                           // perform people detection
- 
+    // RGB蒙版
+    RgbObjectFilter rgb_filter(rgbMatrix);
+    cv::Mat object_mask = rgb_filter.GetObjectMask();
+    cv::Mat back_mask   = rgb_filter.GetBackMask();
+    // 获取背景图层，分离得到墙面模型
+    PointCloudPtr cloud_back = GetCloudFromMask(rgbMatrix, depthMatrix, back_mask);
+    PlaneFilter plane_filter(cloud_back);
+    // 获取物品图层，并做简单处理
+    PointCloudPtr cloud_object = GetCloudFromMask(rgbMatrix, depthMatrix, object_mask);
+    plane_filter.Filter(cloud_object);
+
+    // 计算用于展示的点云
+    PointCloudPtr cloud_display(new PointCloud);
+    float leaf_size_ = 2.0f;
+    pcl::VoxelGrid<PointT> sor;
+    sor.setInputCloud(cloud_raw);
+    sor.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
+    sor.filter(*cloud_display);
+    *cloud_display += *cloud_object;    
+
+
     // 显示点云
     viewer.removeAllPointClouds();
     viewer.removeAllShapes();
-    pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud);
-    viewer.addPointCloud<PointT> (cloud, rgb_handler, "input_cloud");
+    pcl::visualization::PointCloudColorHandlerRGBField<PointT> rgb_handler(cloud_display);
+    viewer.addPointCloud<PointT> (cloud_display, rgb_handler, "input_cloud");
     
+    // 绘制目标的位置
+    ClusterDivider cluster_divider(cloud_object);
+    std::vector<ObjectCluster> clusters = cluster_divider.GetDividedCluster();
+    for (int i=0; i<clusters.size(); ++i)
+    {
+        clusters[i].DrawBoundingBox(viewer, i);
+    }
 
-    // 绘制目标方框
-    unsigned int k = 0;
-    for(std::vector<pcl::people::PersonCluster<PointT> >::iterator it = clusters.begin(); it != clusters.end(); ++it)
-        if (it->getHeight() > min_height)
-        {
-          // TODO  get the info. from `it`
-          it->drawTBoundingBox(viewer, k);
-          k++;
-        }
-    std::cout<<k<<" people found"<<std::endl;
-    
     // 刷新viewer
     viewer.spinOnce();
     

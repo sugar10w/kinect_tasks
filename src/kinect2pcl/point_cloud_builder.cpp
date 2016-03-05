@@ -16,6 +16,9 @@
 #include <iostream>
 #include "kinect2pcl/kinect_parameters.h"
 
+namespace tinker {
+namespace vision {    
+
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -132,4 +135,7 @@ cv::Mat PointCloudBuilder::getPointXY(int pixelx, int pixely, double depth, doub
         return cv::Mat();
     } 
     return solvedXY;
+}
+
+}
 }

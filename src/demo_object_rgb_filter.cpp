@@ -20,12 +20,18 @@
 #include "rgb_filter/color_fixer.h"
 #include "rgb_filter/color_block_filter.h"
 
+
+#include "rgb_filter/rgb_object_filter.h"
+
 using namespace tinker::vision;
 
 /* 获取去除黑色边缘后的图片矩形位置，用于坐标定位和删减无效区域 */
 cv::Rect GetMarginRect(cv::Mat & img);
 /* 腐蚀膨胀 */
 void OpenImage(cv::Mat & img, int range = 3);
+
+/* 无效区填色 */
+uchar useless_color = 0;
 
 int main(int argc, const char * argv[])
 {
@@ -43,7 +49,7 @@ int main(int argc, const char * argv[])
     if (raw_img.empty()) 
 	{ std::cout<<"Cannot open "<<filename<<std::endl; return -1; }
 	
-	cv::imshow("raw", raw_img);
+	//cv::imshow("raw", raw_img);
 
     /* 去除图片边缘的黑色部分，并填补图片内部的黑色空洞 */
 	cv::Rect raw_margin_rect = GetMarginRect(raw_img);
@@ -61,16 +67,6 @@ int main(int argc, const char * argv[])
     LineFilter line_filter(4, 0.342f);
     line_filter.SetIgnoreMask(color_mask);
     cv::Mat lines_mask = line_filter.GetMask(img);
-   
-    std::vector<cv::Vec4i> lines = line_filter.GetLines();
-    std::cout<<"size = "<<lines.size()<<std::endl;
-    for (int i=0; i<lines.size(); ++i)
-    {
-        cv::Vec4i & l = lines[i];
-        std::cout<<"["<<l[0]<<","<<l[1]<<"] ["<<l[2]<<","<<l[3]<<"]"
-            <<std::endl;
-    }
-
 
     /* 处理颜色熵 */
     EntropyFilter entropy_filter(5, 0.4);
@@ -86,37 +82,46 @@ int main(int argc, const char * argv[])
 	entropy_mask.copyTo(raw_entropy_mask(raw_margin_rect));
 
 
+    // !!! RgbObjectFilter
+    RgbObjectFilter rgb_filter(raw_img);
+
 	/* 物体 */
-	cv::Mat mask = ( raw_entropy_mask & raw_lines_mask ) | raw_color_mask;
-    //OpenImage(mask);
-
+	cv::Mat mask = rgb_filter.GetObjectMask();
 	cv::Mat object_img = raw_img.clone();
-	object_img.setTo(255, ~mask);
+	object_img.setTo(useless_color, ~mask);
     cv::imshow("object", object_img);
-	
-	/* 背景 */
-	cv::Mat back_mask = ~raw_color_mask & ~raw_entropy_mask & raw_lines_mask;
-	OpenImage(back_mask);
+    cv::imwrite("object.png", object_img);
 
+	/* 背景 */
+	cv::Mat back_mask = rgb_filter.GetBackMask();
 	cv::Mat back_img = raw_img.clone();
-	back_img.setTo(255,	~back_mask);
+	back_img.setTo(useless_color,	~back_mask);
 	cv::imshow("back", back_img);
+    cv::imwrite("back.png", back_img);
 	
 	/* 直线框架 */
 	cv::Mat lines_img = raw_img.clone();
-	lines_img.setTo(255, raw_lines_mask);
+	lines_img.setTo(useless_color, raw_lines_mask);
 	cv::imshow("lines", lines_img);
-	
+    cv::imwrite("lines.png", lines_img);
+
 	/* 色块区域 */
 	cv::Mat color_img = raw_img.clone();
-	color_img.setTo(255, ~raw_color_mask);
+	color_img.setTo(useless_color, ~raw_color_mask);
 	cv::imshow("color block", color_img);
+    cv::imwrite("color_block.png", color_img);
 
 	/* 熵区域 */
 	cv::Mat entropy_img = raw_img.clone();
-	entropy_img.setTo(255, ~raw_entropy_mask);
+	entropy_img.setTo(useless_color, ~raw_entropy_mask);
 	cv::imshow("entropy block", entropy_img);
+    cv::imwrite("entropy_block.png", entropy_img);
 
+    /* 熵区域的补集 */
+	cv::Mat entropy_img_inverse = raw_img.clone();
+	entropy_img_inverse.setTo(useless_color, raw_entropy_mask);
+	cv::imshow("entropy block", entropy_img_inverse);
+    cv::imwrite("entropy_block_inverse.png", entropy_img_inverse);
     cv::waitKey(0);
 }
 

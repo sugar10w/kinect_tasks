@@ -17,6 +17,9 @@
 #include <opencv2/opencv.hpp>
 #include "common.h"
 
+namespace tinker {
+namespace vision {    
+
 const int DEPTH_IMAGE_ROWS = 424;
 const int DEPTH_IMAGE_COLS = 512;
 const int MIN_DEPTH_CM = 60;
@@ -52,5 +55,7 @@ protected:
     cv::Mat xyzMat;
 };
 
+}
+}
 
 #endif //KINECTDATAANALYZER_POINTCLOUDBUILDER_H

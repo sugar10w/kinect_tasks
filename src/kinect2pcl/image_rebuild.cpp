@@ -12,6 +12,9 @@
 #include <iostream>
 #include "kinect2pcl/kinect_parameters.h"
 
+namespace tinker {
+namespace vision {    
+
 using std::cerr;
 using std::endl;
 using std::cout;
@@ -167,3 +170,5 @@ static cv::Rect GetExtendedRect(cv::Rect rect, bool hiRes, float k)
     return rect;
 }
 
+}
+}
